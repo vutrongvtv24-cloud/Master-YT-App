@@ -21,9 +21,7 @@ from ui_tabs.tab_channel_research import ChannelResearchTab
 # from ui_tabs.tab_channel_search import ChannelSearchTab # << ĐÃ XÓA
 from ui_tabs.tab_channel_analyzer import ChannelAnalyzerTab
 from ui_tabs.tab_downloader import DownloaderTab
-from ui_tabs.tab_ai_analysis import AIAnalysisTab
-from ui_tabs.tab_deep_scan import DeepScanTab
-from ui_tabs.tab_alert_system import AlertSystemTab
+
 
 from googleapiclient.discovery import build
 from googleapiclient.errors import HttpError
@@ -36,11 +34,7 @@ def resource_path(relative_path):
         base_path = os.path.abspath(".")
     return os.path.join(base_path, relative_path)
 
-from PyQt6.QtWidgets import (
-    QApplication, QMainWindow, QTabWidget, QMessageBox,
-    QProgressDialog, QSystemTrayIcon, QMenu
-)
-from PyQt6.QtGui import QIcon, QAction
+
 
 class YouTubeToolApp(QMainWindow):
     def __init__(self):
@@ -109,14 +103,7 @@ class YouTubeToolApp(QMainWindow):
         self.channel_analyzer_tab = ChannelAnalyzerTab(self)
         self.tabs.addTab(self.channel_analyzer_tab, "6. PT chỉ số Kênh")
 
-        self.ai_analysis_tab = AIAnalysisTab(self)
-        self.tabs.addTab(self.ai_analysis_tab, "7. AI Phân tích Comment")
 
-        self.deep_scan_tab = DeepScanTab(self)
-        self.tabs.addTab(self.deep_scan_tab, "8. Quét Subtitle (Deep Scan)")
-
-        self.alert_system_tab = AlertSystemTab(self)
-        self.tabs.addTab(self.alert_system_tab, "9. Hệ thống Cảnh báo")
 
         self.progress_dialog = QProgressDialog("Đang xử lý...", "Hủy", 0, 100, self)
         self.progress_dialog.setWindowTitle("Tiến trình")
@@ -314,7 +301,6 @@ class YouTubeToolApp(QMainWindow):
 
     def apply_styles(self):
         try:
-            current_dir = os.path.dirname(os.path.abspath(__file__))
             style_file_path = resource_path(os.path.join("resources", "styles.qss"))
             if os.path.exists(style_file_path):
                 with open(style_file_path, "r", encoding="utf-8") as f:

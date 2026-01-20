@@ -104,16 +104,29 @@ class ApiKeyTab(QWidget):
         self.txt_api_key = QTextEdit()
         self.txt_api_key.setPlaceholderText("Dán danh sách API Key vào đây, mỗi key một dòng...")
         self.txt_api_key.setMinimumHeight(80)
+        
         # Load API key từ QSettings thông qua main_window
-        # Support legacy single key or new multi-key format
         saved_keys = self.main_window.api_key
-        self.txt_api_key.setText(saved_keys)
+        self._actual_keys = saved_keys  # Store actual keys
+        self._is_key_visible = False  # Default: hidden
+        
+        # Show masked version initially
+        self._update_key_display()
 
         key_input_layout.addWidget(self.txt_api_key, 1)
-
-        # Removed show/hide button for multiline text edit security simplicity
-        # self.btn_show_hide_key = QPushButton("Hiện/Ẩn Key") 
-        # ...
+        
+        # Show/Hide button
+        btn_layout = QVBoxLayout()
+        self.btn_show_hide_key = QPushButton("👁 Hiện")
+        self.btn_show_hide_key.setFixedWidth(80)
+        self.btn_show_hide_key.clicked.connect(self._toggle_key_visibility)
+        btn_layout.addWidget(self.btn_show_hide_key)
+        btn_layout.addStretch()
+        key_input_layout.addLayout(btn_layout)
+        
+        # Connect text changed to update actual keys when visible
+        self.txt_api_key.textChanged.connect(self._on_text_changed)
+        
         group_layout.addLayout(key_input_layout)
 
         buttons_layout = QHBoxLayout()
@@ -139,10 +152,44 @@ class ApiKeyTab(QWidget):
         layout.addWidget(group_box)
         layout.addStretch()
 
+    def _toggle_key_visibility(self):
+        """Toggle between showing actual keys and masked keys."""
+        self._is_key_visible = not self._is_key_visible
+        self._update_key_display()
+        
+        if self._is_key_visible:
+            self.btn_show_hide_key.setText("🔒 Ẩn")
+        else:
+            self.btn_show_hide_key.setText("👁 Hiện")
 
+    def _update_key_display(self):
+        """Update the text display based on visibility state."""
+        # Temporarily disconnect to prevent recursion
+        self.txt_api_key.blockSignals(True)
+        
+        if self._is_key_visible:
+            self.txt_api_key.setText(self._actual_keys)
+            self.txt_api_key.setReadOnly(False)
+        else:
+            # Mask each key with asterisks
+            if self._actual_keys:
+                masked = "\n".join(["*" * len(line) if line.strip() else "" 
+                                   for line in self._actual_keys.split('\n')])
+                self.txt_api_key.setText(masked)
+            else:
+                self.txt_api_key.setText("")
+            self.txt_api_key.setReadOnly(True)
+        
+        self.txt_api_key.blockSignals(False)
+
+    def _on_text_changed(self):
+        """Update actual keys when user edits in visible mode."""
+        if self._is_key_visible:
+            self._actual_keys = self.txt_api_key.toPlainText()
 
     def _save_api_key(self):
-        new_key_text = self.txt_api_key.toPlainText().strip()
+        # Ensure we use actual keys, not masked
+        new_key_text = self._actual_keys.strip() if self._actual_keys else ""
         if not new_key_text:
             QMessageBox.warning(self.main_window, "Lưu ý", "Danh sách API Key không được để trống.")
             return
@@ -162,7 +209,8 @@ class ApiKeyTab(QWidget):
                                      QMessageBox.StandardButton.Yes | QMessageBox.StandardButton.No,
                                      QMessageBox.StandardButton.No)
         if reply == QMessageBox.StandardButton.Yes:
-            self.txt_api_key.clear()
+            self._actual_keys = ""
+            self._update_key_display()
             key_was_present = bool(self.main_window.api_key)
             self.main_window.api_key = ""
             self.main_window.settings.remove(CONFIG_API_KEY)
@@ -176,7 +224,7 @@ class ApiKeyTab(QWidget):
             QMessageBox.warning(self.main_window, "Đang xử lý", "Một tác vụ khác đang chạy. Vui lòng chờ.")
             return
 
-        current_text = self.txt_api_key.toPlainText().strip()
+        current_text = self._actual_keys.strip() if self._actual_keys else ""
         if not current_text:
             QMessageBox.warning(self.main_window, "Thiếu thông tin", "Vui lòng nhập API Key để kiểm tra.")
             return
@@ -209,7 +257,7 @@ class ApiKeyTab(QWidget):
 
         if success:
             QMessageBox.information(self.main_window, "Kiểm tra API Key", message)
-            tested_full_text = self.txt_api_key.toPlainText().strip()
+            tested_full_text = self._actual_keys.strip() if self._actual_keys else ""
             # Tự động lưu key nếu nó hợp lệ và chưa được lưu hoặc khác với key đã lưu
             if self.main_window.api_key != tested_full_text or not self.main_window.settings.value(CONFIG_API_KEY):
                 key_was_changed = (self.main_window.api_key != tested_full_text)
@@ -218,7 +266,7 @@ class ApiKeyTab(QWidget):
                 self.lbl_api_key_status.setText(f"Trạng thái Key: {message} (Đã tự động lưu)")
                 if key_was_changed:
                     self.api_key_changed_and_saved.emit()
-            elif self.main_window.api_key == tested_key and not self.main_window.video_categories_loaded_successfully:
+            elif self.main_window.api_key == tested_full_text and not self.main_window.video_categories_loaded_successfully:
                 # Key giống nhưng danh mục chưa tải được, thử tải lại
                  self.api_key_changed_and_saved.emit()
         else:
