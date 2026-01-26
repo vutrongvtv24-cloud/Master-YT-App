@@ -1,0 +1,11 @@
+pyinstaller YouTubeResearchTool.spec
+
+5.8 xuất file kịch bản tên file chứa lượt view luôn
+5.9 thêm chức năng lọc bình luận Health trước khi xuất. 
+Bổ sung Tab 2 để lọc thêm video trên 4 phút. 
+6.0 Bổ sung them tab tìm kiếm từ khóa ra kết quả Kênh, Loại bỏ Tab tìm kiếm Kênh theo KW (Tab 5)
+Tab 5 mới them bo loc
+Tab 4 thêm bộ lọc bình luận
+Đã cải tiến Tab Kw Research
+6.3 chỉnh lại dữ liệu số bị đánh nhầm là text
+sửa maù text cho phần Loại trừ danh mục
