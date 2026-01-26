@@ -1,0 +1,434 @@
+<!DOCTYPE html>
+<html lang="vi">
+
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Master YouTube Tool - Trạng thái Dự án</title>
+    <style>
+        :root {
+            --primary: #ff0000;
+            --secondary: #282828;
+            --bg: #0f0f0f;
+            --card-bg: #1a1a1a;
+            --text: #f1f1f1;
+            --text-muted: #aaa;
+            --border: #333;
+            --success: #2ecc71;
+            --warning: #f39c12;
+        }
+
+        * {
+            margin: 0;
+            padding: 0;
+            box-sizing: border-box;
+        }
+
+        body {
+            font-family: 'Segoe UI', Roboto, Arial, sans-serif;
+            background: var(--bg);
+            color: var(--text);
+            line-height: 1.6;
+            padding: 2rem;
+        }
+
+        .container {
+            max-width: 1200px;
+            margin: 0 auto;
+        }
+
+        header {
+            text-align: center;
+            margin-bottom: 3rem;
+            padding-bottom: 2rem;
+            border-bottom: 2px solid var(--primary);
+        }
+
+        h1 {
+            font-size: 2.5rem;
+            color: var(--primary);
+            margin-bottom: 0.5rem;
+        }
+
+        .version {
+            color: var(--text-muted);
+            font-size: 1.1rem;
+        }
+
+        .update-time {
+            color: var(--success);
+            font-size: 0.9rem;
+            margin-top: 0.5rem;
+        }
+
+        .section {
+            margin-bottom: 2.5rem;
+        }
+
+        .section-title {
+            font-size: 1.5rem;
+            color: var(--primary);
+            margin-bottom: 1rem;
+            padding-left: 1rem;
+            border-left: 4px solid var(--primary);
+        }
+
+        .tab-card {
+            background: var(--card-bg);
+            border-radius: 12px;
+            padding: 1.5rem;
+            margin-bottom: 1.5rem;
+            border: 1px solid var(--border);
+            transition: transform 0.2s, box-shadow 0.2s;
+        }
+
+        .tab-card:hover {
+            transform: translateY(-3px);
+            box-shadow: 0 8px 25px rgba(255, 0, 0, 0.15);
+        }
+
+        .tab-header {
+            display: flex;
+            align-items: center;
+            gap: 1rem;
+            margin-bottom: 1rem;
+        }
+
+        .tab-number {
+            background: var(--primary);
+            color: white;
+            width: 40px;
+            height: 40px;
+            border-radius: 50%;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            font-weight: bold;
+            font-size: 1.2rem;
+        }
+
+        .tab-name {
+            font-size: 1.3rem;
+            font-weight: 600;
+        }
+
+        .tab-description {
+            color: var(--text-muted);
+            margin-bottom: 1rem;
+        }
+
+        .feature-list {
+            list-style: none;
+            padding-left: 0;
+        }
+
+        .feature-list li {
+            padding: 0.5rem 0;
+            padding-left: 1.5rem;
+            position: relative;
+        }
+
+        .feature-list li::before {
+            content: "✓";
+            color: var(--success);
+            position: absolute;
+            left: 0;
+            font-weight: bold;
+        }
+
+        .logic-section {
+            background: var(--secondary);
+            border-radius: 8px;
+            padding: 1rem;
+            margin-top: 1rem;
+        }
+
+        .logic-title {
+            color: var(--warning);
+            font-weight: 600;
+            margin-bottom: 0.5rem;
+        }
+
+        .logic-content {
+            font-size: 0.9rem;
+            color: var(--text-muted);
+        }
+
+        .tech-stack {
+            display: flex;
+            flex-wrap: wrap;
+            gap: 0.5rem;
+            margin-top: 1rem;
+        }
+
+        .tech-tag {
+            background: var(--secondary);
+            color: var(--text);
+            padding: 0.3rem 0.8rem;
+            border-radius: 20px;
+            font-size: 0.85rem;
+            border: 1px solid var(--border);
+        }
+
+        .status-badge {
+            display: inline-block;
+            padding: 0.3rem 0.8rem;
+            border-radius: 20px;
+            font-size: 0.8rem;
+            font-weight: 600;
+        }
+
+        .status-active {
+            background: rgba(46, 204, 113, 0.2);
+            color: var(--success);
+            border: 1px solid var(--success);
+        }
+
+        footer {
+            text-align: center;
+            margin-top: 3rem;
+            padding-top: 2rem;
+            border-top: 1px solid var(--border);
+            color: var(--text-muted);
+        }
+    </style>
+</head>
+
+<body>
+    <div class="container">
+        <header>
+            <h1>🎬 Master YouTube Tool</h1>
+            <p class="version">Version 6.4 Premium - Vũ Trọng 0913.318.313</p>
+            <p class="update-time">Cập nhật lần cuối: 20/01/2026 22:18</p>
+        </header>
+
+        <section class="section">
+            <h2 class="section-title">📊 Tổng quan Dự án</h2>
+            <div class="tab-card">
+                <p>Tool nghiên cứu YouTube đa năng được xây dựng bằng Python + PyQt6, hỗ trợ YouTuber và Marketers trong
+                    việc nghiên cứu từ khóa, phân tích kênh, và tải nội dung.</p>
+                <div class="tech-stack">
+                    <span class="tech-tag">Python 3.x</span>
+                    <span class="tech-tag">PyQt6</span>
+                    <span class="tech-tag">YouTube Data API v3</span>
+                    <span class="tech-tag">yt-dlp</span>
+                    <span class="tech-tag">openpyxl</span>
+                    <span class="tech-tag">pandas</span>
+                </div>
+            </div>
+        </section>
+
+        <section class="section">
+            <h2 class="section-title">� Mô tả Chi tiết Các Tab</h2>
+
+            <!-- Tab 1 -->
+            <div class="tab-card">
+                <div class="tab-header">
+                    <span class="tab-number">1</span>
+                    <span class="tab-name">API Key</span>
+                    <span class="status-badge status-active">Hoạt động</span>
+                </div>
+                <p class="tab-description">Quản lý và xác thực YouTube Data API Key.</p>
+                <ul class="feature-list">
+                    <li>Nhập và lưu trữ nhiều API Key (mỗi dòng 1 key)</li>
+                    <li>Test API Key trực tiếp để kiểm tra tính hợp lệ</li>
+                    <li>Hiển thị kết quả test chi tiết (quota, trạng thái)</li>
+                    <li>Xóa API Key đã lưu</li>
+                </ul>
+                <div class="logic-section">
+                    <p class="logic-title">⚙️ Logic hoạt động:</p>
+                    <p class="logic-content">
+                        Khi người dùng nhấn "Lưu", API Key được lưu vào QSettings.
+                        Khi nhấn "Test", hệ thống tạo một <code>ApiKeyTestThread</code> chạy ngầm,
+                        gọi API <code>videoCategories().list()</code> để xác minh key hoạt động.
+                        Kết quả được emit qua signal <code>test_result</code> để cập nhật UI.
+                    </p>
+                </div>
+            </div>
+
+            <!-- Tab 2 -->
+            <div class="tab-card">
+                <div class="tab-header">
+                    <span class="tab-number">2</span>
+                    <span class="tab-name">Nghiên cứu Từ khóa</span>
+                    <span class="status-badge status-active">Hoạt động</span>
+                </div>
+                <p class="tab-description">Tìm kiếm video hoặc kênh theo từ khóa với bộ lọc nâng cao.</p>
+                <ul class="feature-list">
+                    <li>Tìm kiếm Video hoặc Kênh theo từ khóa</li>
+                    <li>Bộ lọc: Quốc gia, Ngày đăng, Thời lượng, Danh mục, Độ nét</li>
+                    <li>Lọc Shorts Only (video dưới 60 giây)</li>
+                    <li>Loại trừ danh mục không mong muốn</li>
+                    <li>Lọc kết quả theo Views, Subs (Min/Max)</li>
+                    <li>Xuất kết quả ra Excel</li>
+                    <li>Click vào URL để mở, chuột phải để sao chép</li>
+                </ul>
+                <div class="logic-section">
+                    <p class="logic-title">⚙️ Logic hoạt động:</p>
+                    <p class="logic-content">
+                        Sử dụng <code>SearchVideosThread</code> hoặc <code>SearchChannelsThread</code> chạy ngầm.
+                        Gọi API <code>search().list()</code> với các tham số lọc, sau đó gọi tiếp
+                        <code>videos().list()</code> hoặc <code>channels().list()</code> để lấy thông tin chi tiết.
+                        Kết quả được phân trang qua <code>pageToken</code>, tối đa 500 video hoặc 100 kênh.
+                        Hỗ trợ hủy giữa chừng qua <code>requestInterruption()</code>.
+                    </p>
+                </div>
+            </div>
+
+            <!-- Tab 3 -->
+            <div class="tab-card">
+                <div class="tab-header">
+                    <span class="tab-number">3</span>
+                    <span class="tab-name">Lấy từ khóa gợi ý</span>
+                    <span class="status-badge status-active">Hoạt động</span>
+                </div>
+                <p class="tab-description">Thu thập từ khóa gợi ý từ YouTube Autocomplete (không tốn quota API).</p>
+                <ul class="feature-list">
+                    <li>Nhập từ khóa gốc (seed keyword)</li>
+                    <li>Chọn Quốc gia/Ngôn ngữ target</li>
+                    <li>Tự động mở rộng với các ký tự a-z, 0-9</li>
+                    <li>Hiển thị danh sách từ khóa liên quan</li>
+                    <li>Xuất ra Excel</li>
+                </ul>
+                <div class="logic-section">
+                    <p class="logic-title">⚙️ Logic hoạt động:</p>
+                    <p class="logic-content">
+                        Sử dụng <code>FetchSuggestionsThread</code> gọi đến endpoint
+                        <code>suggestqueries.google.com/complete/search</code> (YouTube Autocomplete API không chính
+                        thức).
+                        Với mỗi ký tự a-z và 0-9, ghép vào sau từ khóa gốc để lấy thêm gợi ý.
+                        Kết quả được deduplicate và sắp xếp theo alphabet.
+                    </p>
+                </div>
+            </div>
+
+            <!-- Tab 4 -->
+            <div class="tab-card">
+                <div class="tab-header">
+                    <span class="tab-number">4</span>
+                    <span class="tab-name">Tải Bình luận, Video, Script</span>
+                    <span class="status-badge status-active">Hoạt động</span>
+                </div>
+                <p class="tab-description">Download nội dung từ YouTube: video, audio, comment, subtitle.</p>
+                <ul class="feature-list">
+                    <li>Nhập nhiều URL video/playlist (mỗi dòng 1 URL)</li>
+                    <li>Tải Video: Chọn chất lượng (1080p, 720p, 480p...) và format (mp4, webm)</li>
+                    <li>Tải Audio: Chọn format (mp3, m4a, wav)</li>
+                    <li>Tải Comment: Lọc theo từ khóa, số like tối thiểu, loại trừ reply</li>
+                    <li>Tải Subtitle/Script: Auto hoặc chọn ngôn ngữ, xuất txt/srt/vtt</li>
+                    <li>Hỗ trợ playlist (tối đa 50 video)</li>
+                    <li>Hiển thị log tiến trình realtime</li>
+                </ul>
+                <div class="logic-section">
+                    <p class="logic-title">⚙️ Logic hoạt động:</p>
+                    <p class="logic-content">
+                        Sử dụng thư viện <code>yt-dlp</code> cho tất cả các tác vụ download.
+                        Mỗi loại tải có thread riêng: <code>DownloadMediaThread</code>,
+                        <code>DownloadCommentsThread</code>, <code>DownloadSubtitlesThread</code>.
+                        Comment được lọc động qua <code>_filter_comments_dynamically()</code>.
+                        Hỗ trợ cancel giữa chừng qua <code>threading.Event</code>.
+                        Tự động skip URL đã tải xong trước đó.
+                    </p>
+                </div>
+            </div>
+
+            <!-- Tab 5 -->
+            <div class="tab-card">
+                <div class="tab-header">
+                    <span class="tab-number">5</span>
+                    <span class="tab-name">Lấy Video của Kênh</span>
+                    <span class="status-badge status-active">Hoạt động</span>
+                </div>
+                <p class="tab-description">Liệt kê tất cả video của một hoặc nhiều kênh YouTube.</p>
+                <ul class="feature-list">
+                    <li>Nhập URL kênh (hỗ trợ @handle, /c/, /channel/, /user/)</li>
+                    <li>Nhập nhiều kênh cùng lúc (mỗi dòng 1 URL)</li>
+                    <li>Lọc theo: Thời lượng tối thiểu, Views tối thiểu</li>
+                    <li>Hiển thị: Tên video, Views, Likes, Comments, Ngày đăng, Thời lượng</li>
+                    <li>Xuất ra Excel với tên kênh</li>
+                </ul>
+                <div class="logic-section">
+                    <p class="logic-title">⚙️ Logic hoạt động:</p>
+                    <p class="logic-content">
+                        Đầu tiên, sử dụng <code>yt-dlp</code> qua <code>extract_channel_id_yt_dlp()</code>
+                        để chuyển đổi URL kênh (handle, custom URL) thành Channel ID chuẩn (UC...).
+                        Sau đó, <code>FetchChannelVideosThread</code> gọi API <code>channels().list()</code>
+                        để lấy Uploads Playlist ID, rồi gọi <code>playlistItems().list()</code> để liệt kê video.
+                        Cuối cùng, gọi <code>videos().list()</code> để lấy thông tin chi tiết (views, likes...).
+                    </p>
+                </div>
+            </div>
+
+            <!-- Tab 6 -->
+            <div class="tab-card">
+                <div class="tab-header">
+                    <span class="tab-number">6</span>
+                    <span class="tab-name">Phân tích Chỉ số Kênh</span>
+                    <span class="status-badge status-active">Hoạt động</span>
+                </div>
+                <p class="tab-description">Phân tích thống kê chi tiết của nhiều kênh YouTube cùng lúc.</p>
+                <ul class="feature-list">
+                    <li>Nhập nhiều URL kênh để so sánh</li>
+                    <li>Hiển thị: Tên kênh, Subscribers, Tổng Views, Số video, Ngày tạo</li>
+                    <li>Tính toán Engagement Rate ước tính</li>
+                    <li>Click vào URL kênh để mở trực tiếp</li>
+                    <li>Xuất kết quả so sánh ra Excel</li>
+                </ul>
+                <div class="logic-section">
+                    <p class="logic-title">⚙️ Logic hoạt động:</p>
+                    <p class="logic-content">
+                        Sử dụng <code>ChannelAnalyzerRunnable</code> (QRunnable chạy trên ThreadPool)
+                        để xử lý batch các URL kênh. Mỗi URL được validate format, sau đó chuyển đổi
+                        thành Channel ID qua <code>yt-dlp</code>.
+                        Gọi API <code>channels().list()</code> với <code>part=snippet,statistics</code>
+                        để lấy thông tin. Kết quả được emit qua signal để cập nhật bảng.
+                    </p>
+                </div>
+            </div>
+        </section>
+
+        <section class="section">
+            <h2 class="section-title">🛠️ Các Module Hỗ trợ</h2>
+            <div class="tab-card">
+                <ul class="feature-list">
+                    <li><strong>youtube_service.py</strong>: Lớp service xử lý API calls với caching và key rotation
+                    </li>
+                    <li><strong>config.py</strong>: Chứa constants, mapping quốc gia, options cho filters</li>
+                    <li><strong>utils.py</strong>: Các hàm tiện ích (extract ID, format date, convert duration...)</li>
+                    <li><strong>db_cache.py</strong>: Hệ thống caching API response để giảm quota usage</li>
+                </ul>
+            </div>
+        </section>
+
+        <section class="section">
+            <h2 class="section-title">📝 Lịch sử Cập nhật</h2>
+            <div class="tab-card">
+                <ul class="feature-list">
+                    <li><strong>26/01/2026</strong>:
+                        <ul>
+                            <li>✔️ Đã khắc phục lỗi khóa giao diện (Global blocking): Giờ đây, các tab Chức năng có thể
+                                chạy song song với Tab Downloader.</li>
+                            <li>✔️ Tinh chỉnh lại kích thước cửa sổ mặc định (1280x800) để hiển thị tốt trên Laptop màn
+                                hình nhỏ.</li>
+                            <li>✔️ Thêm chức năng trong Menu "Công cụ" để cập nhật trực tiếp thư viện
+                                <code>yt-dlp</code> (khi chạy từ mã nguồn).</li>
+                            <li>🛠️ Tạo file cấu hình <code>Master_YTB_V6.4.spec</code> để hỗ trợ build file EXE chuyên
+                                nghiệp hơn.</li>
+                        </ul>
+                    </li>
+                    <li><strong>20/01/2026</strong>: Loại bỏ Tab 7 (AI Analysis), Tab 8 (Deep Scan), Tab 9 (Alert
+                        System). Tối ưu code, xóa import dư thừa.</li>
+                    <li><strong>19/01/2026</strong>: Thêm tính năng AI Analysis và Chat Interface cho Tab 7</li>
+                    <li><strong>18/01/2026</strong>: Cập nhật hệ thống key rotation và caching</li>
+                </ul>
+            </div>
+        </section>
+
+        <footer>
+            <p>© 2026 Master YouTube Tool - Developed by Vũ Trọng</p>
+            <p>Liên hệ: 0913.318.313</p>
+        </footer>
+    </div>
+</body>
+
+</html>

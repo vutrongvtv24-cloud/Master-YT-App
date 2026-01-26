@@ -1,0 +1,22 @@
+# To install these dependencies, run: pip install -r requirements.txt
+
+# Core framework for the user interface
+PyQt6
+
+# Google API client for YouTube Data API
+google-api-python-client
+
+# For parsing ISO 8601 durations (e.g., PT1M30S)
+isodate
+
+# For downloading videos, comments, and extracting info
+yt-dlp
+
+# For making simple HTTP requests (used in suggestions tab)
+requests
+
+# For reading and writing Excel (.xlsx) files
+openpyxl
+
+# For data manipulation and analysis (used in channel analyzer)
+pandas

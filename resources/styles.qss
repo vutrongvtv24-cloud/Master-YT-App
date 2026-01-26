@@ -1,0 +1,184 @@
+/* youtube_research_tool/resources/styles.qss */
+
+QMainWindow {
+    background-color: #f0f0f0;
+}
+QTabWidget::pane {
+    border-top: 1px solid #C2C7CB;
+    background: white;
+}
+QTabBar::tab {
+    background: qlineargradient(x1:0, y1:0, x2:0, y2:1,
+                                stop:0 #E1E1E1, stop:0.4 #DDDDDD,
+                                stop:0.5 #D8D8D8, stop:1.0 #D3D3D3);
+    border: 1px solid #C4C4C3;
+    border-bottom-color: #C2C7CB;
+    border-top-left-radius: 4px;
+    border-top-right-radius: 4px;
+    min-width: 8ex;
+    padding: 6px 12px;
+    margin-right: 2px;
+    font-size: 13px;
+    color: black;
+    font-weight: bold;
+}
+
+/* ✅ Ghi đè để làm nổi tab đang được chọn */
+QTabBar::tab:selected {
+    background: orange;
+    color: black;
+    border-color: #9B9B9B;
+    border-bottom-color: orange;
+    font-weight: bold;
+}
+
+QTabBar::tab:hover {
+    background: qlineargradient(x1:0, y1:0, x2:0, y2:1,
+                                stop:0 #fafafa, stop:0.4 #f4f4f4,
+                                stop:0.5 #e7e7e7, stop:1.0 #fafafa);
+}
+QPushButton {
+    background-color: #0078D7;
+    border: 1px solid #005A9E;
+    color: white;
+    padding: 8px 15px;
+    text-align: center;
+    font-size: 14px;
+    margin: 4px 2px;
+    border-radius: 4px;
+    min-height: 28px;
+}
+QPushButton:hover {
+    background-color: #005A9E;
+}
+QPushButton:pressed {
+    background-color: #004C8A;
+}
+QPushButton:disabled {
+    background-color: #d3d3d3;
+    border-color: #c0c0c0;
+    color: #808080;
+}
+QPushButton#btnSecondary {
+    background-color: #6c757d;
+    border-color: #5a6268;
+}
+QPushButton#btnSecondary:hover {
+    background-color: #5a6268;
+}
+QPushButton#btnDanger {
+    background-color: #dc3545;
+    border-color: #bd2130;
+}
+QPushButton#btnDanger:hover {
+    background-color: #c82333;
+}
+QLineEdit, QTableWidget, QComboBox, QSpinBox, QListWidget {
+    border: 1px solid #ccc;
+    padding: 6px;
+    border-radius: 3px;
+    background-color: white;
+    color: #333;
+    font-size: 13px;
+}
+QSpinBox {
+    min-width: 70px;
+    padding: 5px;
+}
+QComboBox::drop-down {
+    border: none;
+}
+QComboBox QAbstractItemView {
+    border: 1px solid #ccc;
+    background-color: white;
+    color: #333;
+    selection-background-color: #0078D7;
+    selection-color: white;
+}
+QTableWidget {
+    gridline-color: #d0d0d0;
+}
+QTableWidget QTableCornerButton::section {
+    background-color: #e8e8e8;
+    border: 1px solid #d0d0d0;
+}
+QHeaderView::section {
+    background-color: #e8e8e8;
+    padding: 5px;
+    border: 1px solid #d0d0d0;
+    font-size: 13px;
+    font-weight: bold;
+    color: black;
+}
+QLabel {
+    font-size: 13px;
+    color: black; /* Đã đổi thành màu đen */
+    padding: 3px 0;
+}
+QGroupBox {
+    font-weight: bold;
+    font-size: 14px;
+    border: 1px solid #c0c0c0;
+    border-radius: 5px;
+    margin-top: 1ex;
+    padding: 8px;
+    background-color: #f9f9f9;
+}
+QGroupBox::title {
+    subcontrol-origin: margin;
+    subcontrol-position: top left;
+    padding: 0 5px;
+    left: 10px;
+    color: #0078D7;
+}
+QStatusBar {
+    font-size: 12px;
+    color: #333;
+}
+
+/* === SỬA LỖI Ở ĐÂY === */
+QMessageBox QLabel {
+    color: red; /* Đổi thành màu đỏ */
+    font-weight: bold; /* Thêm để in đậm */
+    background-color: transparent;
+    font-size: 13px;
+}
+
+QMessageBox QPushButton {
+    background-color: #0078D7;
+    color: white;
+    border-radius: 3px;
+    padding: 6px 12px;
+    min-width: 80px;
+    font-size: 13px;
+}
+QMessageBox QPushButton:hover {
+    background-color: #005A9E;
+}
+QProgressDialog {
+    font-size: 13px;
+    color: #212529;
+}
+QProgressDialog QLabel {
+    font-size: 13px;
+    color: #212529;
+}
+
+/* Thêm style cho Progress Bar giống tab 8 */
+QProgressBar {
+    border: 2px solid #000000;
+    border-radius: 5px;
+    background-color: #FFFFFF;
+    height: 20px;
+    text-align: center;
+}
+QProgressBar::chunk {
+    background-color: #007BFF;
+    border-radius: 3px;
+}
+/* Thêm đoạn này để định dạng màu chữ cho QCheckBox */
+QCheckBox {
+    color: black;
+    font-size: 13px;
+    /* Tùy chọn: Thêm để đồng bộ kích thước chữ với các mục khác */
+}
