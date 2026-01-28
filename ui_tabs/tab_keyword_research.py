@@ -22,6 +22,8 @@ from config import (
     VIDEO_DEFINITION_OPTIONS_MAP
 )
 from utils import format_date_dd_mm_yyyy, convert_iso_duration, format_int_with_separator
+from services.api_manager import APIKeyManager, YouTubeService
+from googleapiclient.errors import HttpError
 
 class SearchVideosThread(QThread):
     videos_fetched = pyqtSignal(list)
@@ -58,13 +60,9 @@ class SearchVideosThread(QThread):
 
         try:
             self.progress_updated.emit(0, "Đang kết nối tới YouTube...")
-            from youtube_service import YouTubeService, APIKeyManager
 
             # Initialize Service with Key Manager
-            # Note: self.api_key now may contain multiple keys (newline separated)
-            key_list = self.api_key.split('\n')
-            key_manager = APIKeyManager(key_list)
-            youtube_service_wrapper = YouTubeService(key_manager)
+            youtube_service_wrapper = YouTubeService()
             
             if self.isInterruptionRequested(): return
             if self.isInterruptionRequested(): return
@@ -97,7 +95,9 @@ class SearchVideosThread(QThread):
                 if self.is_shorts_only:
                     search_params['videoDuration'] = 'short'
 
-                search_response = youtube_service_wrapper.search_videos(self.keyword, **search_params)
+                # Use the wrapper's search_videos which expects kwargs that match list() arguments
+                # Note: 'q' is already in search_params, so we pass **search_params
+                search_response = youtube_service_wrapper.search_videos(**search_params)
                 if self.isInterruptionRequested(): return
 
                 current_page_ids = []
@@ -128,7 +128,10 @@ class SearchVideosThread(QThread):
             for i in range(0, len(all_channel_ids), 50):
                 if self.isInterruptionRequested(): return
                 chunk_ids = all_channel_ids[i:i+50]
-                channels_response = youtube_service_wrapper.get_channel_details(chunk_ids)
+                channels_response = youtube_service_wrapper.get_channel_details(
+                    part='snippet,statistics',
+                    id=','.join(chunk_ids)
+                )
                 for channel in channels_response.get('items', []):
                     stats = channel.get('statistics', {})
                     channel_details[channel['id']] = {
@@ -145,7 +148,10 @@ class SearchVideosThread(QThread):
                 # Fallback to key manager for raw call if wrapper doesn't have it, 
                 # OR update wrapper in parallel.
                 # Let's assume we update wrapper.
-                videos_response = youtube_service_wrapper.get_video_details(chunk_ids)
+                videos_response = youtube_service_wrapper.get_video_details(
+                    part='snippet,statistics,contentDetails',
+                    id=','.join(chunk_ids)
+                )
                 video_details_list.extend(videos_response.get('items', []))
                 details_progress = 30 + int(60 * (len(video_details_list) / len(all_video_ids)))
                 self.progress_updated.emit(details_progress, f"Đang lấy chi tiết video ({len(video_details_list)}/{len(all_video_ids)})...")

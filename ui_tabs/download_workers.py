@@ -2,6 +2,7 @@ import os
 import re
 import traceback
 import yt_dlp
+from datetime import datetime
 from PyQt6.QtCore import QThread, pyqtSignal
 
 # --- Constants ---

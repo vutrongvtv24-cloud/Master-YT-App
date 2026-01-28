@@ -6,6 +6,8 @@ import os
 import logging
 from datetime import datetime, timedelta
 
+logger = logging.getLogger(__name__)
+
 # Create 'data' directory if not exists
 if not os.path.exists('data'):
     os.makedirs('data')
@@ -77,19 +79,26 @@ def set_cache(key, data, ttl_seconds=3600):
         logging.error(f"Cache write error: {e}")
 
 def clear_cache_key(key):
+    """Clear a specific cache entry by key."""
     try:
         conn = sqlite3.connect(DB_PATH)
         cursor = conn.cursor()
         cursor.execute('DELETE FROM api_cache WHERE key = ?', (key,))
         conn.commit()
         conn.close()
-    except:
-        pass
+    except sqlite3.Error as e:
+        logger.error(f"Failed to clear cache key '{key}': {e}")
+    except Exception as e:
+        logger.error(f"Unexpected error clearing cache key '{key}': {e}")
 
 def clear_all_cache():
+    """Clear all cache entries by removing the database file."""
     try:
         if os.path.exists(DB_PATH):
             os.remove(DB_PATH)
             init_db()
-    except:
-        pass
+            logger.info("All cache cleared successfully")
+    except OSError as e:
+        logger.error(f"Failed to clear cache database: {e}")
+    except Exception as e:
+        logger.error(f"Unexpected error clearing all cache: {e}")

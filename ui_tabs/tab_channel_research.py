@@ -23,7 +23,7 @@ from utils import (
     convert_iso_duration
 )
 
-from googleapiclient.discovery import build
+from services.api_manager import APIKeyManager, YouTubeService
 from googleapiclient.errors import HttpError
 
 def format_date_to_ddmmyyyy(iso_date):
@@ -57,34 +57,32 @@ class FetchChannelVideosThread(QThread):
     error_occurred = pyqtSignal(str)
     progress_updated = pyqtSignal(int, str)
 
-    def __init__(self, api_key, channel_id, video_categories_map, parent=None):
+    def __init__(self, channel_id, video_categories_map, parent=None):
         super().__init__(parent)
-        self.api_key = api_key
         self.channel_id = channel_id
         self.video_categories_map = video_categories_map or {}
         self._is_interruption_requested = False
 
     def run(self):
-        if not self.api_key:
-            self.error_occurred.emit("Vui lòng cung cấp API Key ở Tab 1 (API Key).")
-            return
         if not self.channel_id:
             self.error_occurred.emit("Channel ID không hợp lệ.")
             return
 
         try:
             self.progress_updated.emit(0, f"Đang kết nối tới YouTube để lấy thông tin kênh {self.channel_id}...")
-            self.progress_updated.emit(0, f"Đang kết nối tới YouTube để lấy thông tin kênh {self.channel_id}...")
-            from youtube_service import YouTubeService, APIKeyManager
-
-            key_list = self.api_key.split('\n')
-            key_manager = APIKeyManager(key_list)
-            youtube_service_wrapper = YouTubeService(key_manager)
+            
+            # Sử dụng YouTubeService wrapper từ api_manager
+            youtube_service_wrapper = YouTubeService()
+            # Đảm bảo keys đã được update (dù main app đã set, nhưng check lại cho chắc)
+            # APIKeyManager là Singleton nên không cần pass key list lại nếu đã set
             
             if self.isInterruptionRequested(): return
 
             self.progress_updated.emit(5, f"Đang lấy thông tin chi tiết kênh {self.channel_id}...")
-            channel_response = youtube_service_wrapper.get_channel_details(self.channel_id)
+            channel_response = youtube_service_wrapper.get_channel_details(
+                part='snippet,contentDetails',
+                id=self.channel_id
+            )
             if self.isInterruptionRequested(): return
 
             if not channel_response.get("items"):
@@ -107,9 +105,10 @@ class FetchChannelVideosThread(QThread):
             while True:
                 if self.isInterruptionRequested(): return
                 playlist_response = youtube_service_wrapper.get_playlist_items(
-                    playlist_id=uploads_playlist_id,
-                    max_results=50,
-                    page_token=next_page_token
+                    part='snippet,contentDetails',
+                    playlistId=uploads_playlist_id,
+                    maxResults=50,
+                    pageToken=next_page_token
                 )
                 if self.isInterruptionRequested(): return
 
@@ -142,7 +141,10 @@ class FetchChannelVideosThread(QThread):
                 if self.isInterruptionRequested(): return
                 chunk_video_ids = video_ids_to_fetch_details[i:i+50]
                 
-                videos_list_response = youtube_service_wrapper.get_video_details(chunk_video_ids)
+                videos_list_response = youtube_service_wrapper.get_video_details(
+                    part='snippet,statistics,contentDetails',
+                    id=','.join(chunk_video_ids)
+                )
                 if self.isInterruptionRequested(): return
 
                 for video_stat_item in videos_list_response.get("items", []):
@@ -391,7 +393,6 @@ class ChannelResearchTab(QWidget):
             self.main_window.update_progress_dialog(base_progress, f"Đang lấy video cho kênh {idx+1}/{total_channels}: {channel_id}...")
 
             self.fetch_channel_videos_thread = FetchChannelVideosThread(
-                api_key=self.main_window.api_key,
                 channel_id=channel_id,
                 video_categories_map=self.main_window.video_categories,
                 parent=self

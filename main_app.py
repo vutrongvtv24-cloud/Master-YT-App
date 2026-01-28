@@ -1,5 +1,6 @@
 import sys
 import os
+import logging
 from datetime import datetime, timezone, timedelta
 from PyQt6.QtWidgets import (
     QApplication, QMainWindow, QTabWidget, QMessageBox,
@@ -7,6 +8,12 @@ from PyQt6.QtWidgets import (
 )
 from PyQt6.QtCore import Qt, QSettings, QUrl, pyqtSlot
 from PyQt6.QtGui import QDesktopServices, QClipboard, QIcon, QAction
+
+# Import logging configuration
+from logging_config import setup_logging
+
+# Initialize logger for this module
+logger = logging.getLogger(__name__)
 
 from config import (
     APP_NAME, ORGANIZATION_NAME, CONFIG_API_KEY,
@@ -145,12 +152,16 @@ class YouTubeToolApp(QMainWindow):
         QApplication.processEvents()
 
         try:
-            from youtube_service import APIKeyManager
-            key_list = self.api_key.split('\n')
-            key_manager = APIKeyManager(key_list)
-            youtube_service = key_manager.get_service()
+
+            from services.api_manager import APIKeyManager
+            APIKeyManager.set_api_keys(self.api_key) # Update keys in manager
+            try:
+                youtube_service = APIKeyManager.get_service()
+            except ValueError:
+                 self.statusBar().showMessage("Không thể khởi tạo dịch vụ YouTube (Key lỗi).", 3000)
+                 return
             if not youtube_service:
-                 raise Exception("Không thể khởi tạo dịch vụ YouTube (Key không hợp lệ).")
+                 raise Exception("Không thể khởi tạo dịch vụ YouTube.")
             region_codes_to_try = ['US', 'VN', 'GB'] 
             response = None
             last_error = None
@@ -194,7 +205,9 @@ class YouTubeToolApp(QMainWindow):
                                 error_msg_display = "Lỗi tải DM (Key không hợp lệ)"
                             else:
                                 error_msg_display = f"Lỗi tải DM (API {last_error.resp.status})"
-                        except: error_msg_display = f"Lỗi tải DM (API {last_error.resp.status})"
+                        except (json.JSONDecodeError, KeyError, AttributeError) as parse_err:
+                            logger.warning(f"Could not parse error details: {parse_err}")
+                            error_msg_display = f"Lỗi tải DM (API {last_error.resp.status})"
                     else: error_msg_display = f"Lỗi tải DM ({type(last_error).__name__})"
 
                 self.statusBar().showMessage(error_msg_display, 5000)
@@ -260,7 +273,7 @@ class YouTubeToolApp(QMainWindow):
         if hasattr(self, 'channel_analyzer_tab'):
             self.channel_analyzer_tab.set_buttons_enabled(enabled)
         if hasattr(self, 'downloader_tab'):
-            self.downloader_tab.set_buttons_enabled(self.is_operation_running)
+            self.downloader_tab.set_buttons_enabled(enabled)
 
     def show_progress_dialog(self, message, current_value=0, show_cancel=True):
         self.progress_dialog.setLabelText(message)
@@ -366,7 +379,7 @@ class YouTubeToolApp(QMainWindow):
             with open(resource_path(style_file), "r", encoding='utf-8') as f: # Cần encoding utf-8 để đọc QSS có comment tiếng Việt
                 self.setStyleSheet(f.read())
         except Exception as e:
-            print(f"Error loading styles ({style_file}): {e}")
+            logger.error(f"Error loading styles ({style_file}): {e}")
 
     def toggle_theme(self):
         if self.current_theme == "dark":
@@ -407,9 +420,15 @@ class YouTubeToolApp(QMainWindow):
                 event.ignore()
 
 if __name__ == '__main__':
+    # Initialize logging system first
+    log_file = setup_logging()
+    logger.info("Application starting...")
+    
     app = QApplication(sys.argv)
     app.setOrganizationName(ORGANIZATION_NAME)
     app.setApplicationName(APP_NAME)
     main_window = YouTubeToolApp()
     main_window.show()
+    
+    logger.info("Main window displayed")
     sys.exit(app.exec())

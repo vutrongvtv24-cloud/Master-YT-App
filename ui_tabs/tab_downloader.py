@@ -1,6 +1,7 @@
 import os
 import threading
 import json
+import csv
 
 from PyQt6.QtWidgets import (
     QWidget, QVBoxLayout, QHBoxLayout, QLabel, QTextEdit, QLineEdit,
@@ -9,7 +10,7 @@ from PyQt6.QtWidgets import (
     QCheckBox, QGridLayout, QScrollArea
 )
 from PyQt6.QtCore import Qt, pyqtSlot
-from PyQt6.QtGui import QIntValidator
+from PyQt6.QtGui import QIntValidator, QTextCursor
 
 # Import Worker Threads and Constants from separate module
 from ui_tabs.download_workers import (

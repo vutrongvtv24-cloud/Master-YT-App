@@ -1,5 +1,8 @@
 import google.generativeai as genai
+import logging
 from PyQt6.QtCore import QObject, pyqtSignal
+
+logger = logging.getLogger(__name__)
 
 class AIService(QObject):
     """
@@ -41,7 +44,7 @@ class AIService(QObject):
                 
                 self.model = genai.GenerativeModel(self.model_name)
             except Exception as e:
-                print(f"Error configuring Gemini: {e}")
+                logger.error(f"Error configuring Gemini: {e}")
 
     def analyze_comments(self, comments_list, context="", custom_instruction=None):
         """

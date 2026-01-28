@@ -7,6 +7,7 @@ from PyQt6.QtGui import QDesktopServices, QColor
 from googleapiclient.discovery import build
 from googleapiclient.errors import HttpError
 import pandas as pd
+from services.api_manager import APIKeyManager, YouTubeService
 from datetime import datetime
 import logging
 import re
@@ -23,10 +24,9 @@ class ChannelAnalyzerSignals(QObject):
     progress_updated = pyqtSignal(int, str)  # value, message
 
 class ChannelAnalyzerRunnable(QRunnable):
-    def __init__(self, api_key, channel_urls, parent):
+    def __init__(self, channel_urls, parent):
         super().__init__()
         self.signals = ChannelAnalyzerSignals()
-        self.api_key = api_key
         self.channel_urls = channel_urls
         self.parent = parent
         self._is_interruption_requested = False
@@ -38,11 +38,6 @@ class ChannelAnalyzerRunnable(QRunnable):
         return bool(re.match(pattern, url))
 
     def run(self):
-        if not self.api_key:
-            self.signals.status_updated.emit("API Key không có hoặc không hợp lệ.", 3000)
-            self.signals.data_fetched.emit([], False)
-            return
-
         self.signals.progress_updated.emit(0, "Đang khởi tạo...")
         logger.debug("Starting channel analysis with %d URLs", len(self.channel_urls))
         results = []
@@ -50,10 +45,10 @@ class ChannelAnalyzerRunnable(QRunnable):
         processed = 0
 
         try:
-            from youtube_service import YouTubeService, APIKeyManager
-            key_list = self.api_key.split('\n')
-            key_manager = APIKeyManager(key_list)
-            youtube_service_wrapper = YouTubeService(key_manager)
+            # from youtube_service import YouTubeService, APIKeyManager # Removed
+            # key_list = self.api_key.split('\n') # Removed
+            # key_manager = APIKeyManager(key_list) # Removed
+            youtube_service_wrapper = YouTubeService() # Use centralized service
             channel_ids = []
             url_to_info = {}
 
@@ -80,7 +75,7 @@ class ChannelAnalyzerRunnable(QRunnable):
                     progress = int(5 + (processed / total_urls) * 45)
                     self.signals.progress_updated.emit(progress, f"Đã xử lý {processed}/{total_urls} URL...")
                     continue
-                channel_id, error = extract_channel_id_yt_dlp(url, lambda msg, timeout: self.signals.status_updated.emit(msg, timeout))
+                channel_id, error = extract_channel_id_yt_dlp(url, lambda msg: self.signals.status_updated.emit(msg, 3000))
                 if channel_id:
                     channel_ids.append(channel_id)
                     url_to_info[channel_id] = {'url': url}
@@ -118,7 +113,10 @@ class ChannelAnalyzerRunnable(QRunnable):
                 
                 # Wrapper method handles retry and rotation automatically
                 try:
-                    response = youtube_service_wrapper.get_channel_details(batch_ids)
+                    response = youtube_service_wrapper.get_channel_details(
+                        part='snippet,statistics,topicDetails',
+                        id=','.join(batch_ids)
+                    )
                     for item in response.get('items', []):
                         channel_id = item['id']
                         snippet = item.get('snippet', {})
@@ -318,7 +316,7 @@ class ChannelAnalyzerTab(QWidget):
             return
 
         batch_urls = self.url_batches[self.current_batch]
-        self.runnable = ChannelAnalyzerRunnable(self.parent.get_active_api_key(), batch_urls, self.parent)
+        self.runnable = ChannelAnalyzerRunnable(batch_urls, self.parent)
         self.runnable.signals.data_fetched.connect(self.on_batch_data_fetched)
         self.runnable.signals.status_updated.connect(lambda msg, timeout: self.parent.statusBar().showMessage(msg, timeout))
         self.runnable.signals.error_occurred.connect(self.parent.on_api_error_common_slot)

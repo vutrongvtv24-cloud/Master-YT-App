@@ -2,7 +2,10 @@
 import re
 import yt_dlp
 import isodate
+import logging
 from datetime import datetime
+
+logger = logging.getLogger(__name__)
 
 def extract_video_id_from_url(url):
     """
@@ -81,7 +84,8 @@ def format_datetime_iso(iso_str):
         # Xử lý trường hợp có 'Z' ở cuối
         dt = datetime.fromisoformat(iso_str.replace('Z', '+00:00'))
         return dt.strftime("%d/%m/%Y %H:%M:%S")
-    except:
+    except (ValueError, AttributeError) as e:
+        logger.debug(f"Could not parse datetime '{iso_str}': {e}")
         return iso_str
 
 def format_date_dd_mm_yyyy(iso_str):
@@ -92,7 +96,8 @@ def format_date_dd_mm_yyyy(iso_str):
     try:
         dt = datetime.fromisoformat(iso_str.replace('Z', '+00:00'))
         return dt.strftime("%d-%m-%Y")
-    except:
+    except (ValueError, AttributeError) as e:
+        logger.debug(f"Could not parse date '{iso_str}': {e}")
         return iso_str
 
 def format_int_with_separator(value):
@@ -104,7 +109,8 @@ def format_int_with_separator(value):
     try:
         val = int(value)
         return f"{val:,}"
-    except:
+    except (ValueError, TypeError) as e:
+        logger.debug(f"Could not format number '{value}': {e}")
         return str(value)
 
 # Alias cho hàm này vì tab_channel_analyzer gọi tên khác
@@ -129,5 +135,6 @@ def convert_iso_duration(iso_duration):
             return f"{hours}:{minutes:02d}:{seconds:02d}"
         else:
             return f"{minutes}:{seconds:02d}"
-    except:
+    except (ValueError, AttributeError, isodate.ISO8601Error) as e:
+        logger.debug(f"Could not parse duration '{iso_duration}': {e}")
         return iso_duration
