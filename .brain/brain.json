@@ -1,0 +1,253 @@
+{
+    "meta": {
+        "schema_version": "1.1.0",
+        "awf_version": "4.0.0",
+        "created_at": "2026-01-28T15:44:28+07:00",
+        "last_updated": "2026-01-28T15:44:28+07:00"
+    },
+    "project": {
+        "name": "Master-YT-App",
+        "type": "desktop_application",
+        "framework": "PyQt6",
+        "language": "Python",
+        "version": "6.4",
+        "description": "YouTube Research Tool - Công cụ nghiên cứu YouTube với nhiều tính năng: tải video/comment, phân tích kênh, nghiên cứu từ khóa",
+        "status": "production",
+        "repository": "https://github.com/vutrongvtv24-cloud/Master-YT-App"
+    },
+    "tech_stack": {
+        "frontend": {
+            "framework": "PyQt6",
+            "styling": "QSS (Qt Style Sheets)",
+            "themes": [
+                "dark",
+                "light"
+            ]
+        },
+        "backend": {
+            "language": "Python 3.x",
+            "key_libraries": [
+                "PyQt6 - UI framework",
+                "google-api-python-client - YouTube Data API",
+                "yt-dlp - Video/subtitle downloading",
+                "pandas - Data manipulation",
+                "openpyxl - Excel export",
+                "isodate - ISO 8601 parsing",
+                "requests - HTTP requests"
+            ]
+        },
+        "database": {
+            "type": "SQLite",
+            "file": "data/cache.db",
+            "purpose": "API response caching"
+        },
+        "logging": {
+            "system": "Python logging module",
+            "config_file": "logging_config.py",
+            "log_location": "~/YouTubeResearchTool/logs/app_YYYYMMDD.log",
+            "format": "timestamp - module - level - message"
+        },
+        "apis": {
+            "youtube_data_api_v3": {
+                "purpose": "Fetch video, channel, comment data",
+                "key_management": "APIKeyManager singleton with rotation"
+            },
+            "google_gemini_api": {
+                "purpose": "AI comment analysis",
+                "optional": true
+            }
+        }
+    },
+    "architecture": {
+        "pattern": "MVC-like with Tab-based UI",
+        "main_components": [
+            {
+                "name": "main_app.py",
+                "role": "Main window, tab management, global state"
+            },
+            {
+                "name": "ui_tabs/",
+                "role": "Individual feature tabs (API Key, Keyword Research, Downloader, etc.)"
+            },
+            {
+                "name": "services/",
+                "role": "API management, key rotation"
+            },
+            {
+                "name": "utils.py",
+                "role": "Utility functions (formatting, parsing)"
+            },
+            {
+                "name": "config.py",
+                "role": "Configuration constants"
+            },
+            {
+                "name": "db_cache.py",
+                "role": "SQLite caching layer"
+            },
+            {
+                "name": "logging_config.py",
+                "role": "Centralized logging setup"
+            }
+        ],
+        "threading": {
+            "model": "QThread for background tasks",
+            "workers": [
+                "ChannelAnalyzerRunnable",
+                "FetchChannelVideosThread",
+                "DownloadMediaThread",
+                "DownloadCommentsThread",
+                "DownloadSubtitlesThread"
+            ]
+        }
+    },
+    "database_schema": {
+        "summary": "SQLite database chỉ dùng để cache API responses, giảm quota usage",
+        "tables": [
+            {
+                "name": "api_cache",
+                "columns": [
+                    "key TEXT PRIMARY KEY",
+                    "response_json TEXT",
+                    "timestamp REAL",
+                    "expiry REAL"
+                ],
+                "purpose": "Cache API responses với TTL"
+            },
+            {
+                "name": "key_usage",
+                "columns": [
+                    "api_key TEXT PRIMARY KEY",
+                    "used_quota INTEGER DEFAULT 0",
+                    "last_reset REAL"
+                ],
+                "purpose": "Track quota usage per API key (future expansion)"
+            }
+        ],
+        "relationships_explained": "Không có relationships - chỉ là simple cache"
+    },
+    "features": [
+        {
+            "name": "API Key Management",
+            "tab": "1. API Key",
+            "status": "implemented",
+            "description": "Quản lý multiple API keys, test validity, auto-save"
+        },
+        {
+            "name": "Keyword Research",
+            "tab": "2. Nghiên cứu Từ khóa",
+            "status": "implemented",
+            "description": "Tìm kiếm video theo keyword với filters (duration, date, category, region)"
+        },
+        {
+            "name": "Keyword Suggestions",
+            "tab": "3. Lấy từ khóa gợi ý",
+            "status": "implemented",
+            "description": "Lấy autocomplete suggestions từ YouTube"
+        },
+        {
+            "name": "Video/Comment Downloader",
+            "tab": "4. Tải Bình luận, Video, Script",
+            "status": "implemented",
+            "description": "Tải video, audio, comments, subtitles với filtering options"
+        },
+        {
+            "name": "Channel Video Fetcher",
+            "tab": "5. Lấy Video của Kênh",
+            "status": "implemented",
+            "description": "Lấy tất cả video của kênh với filters (views, comments, duration)"
+        },
+        {
+            "name": "Channel Analyzer",
+            "tab": "6. PT chỉ số Kênh",
+            "status": "implemented",
+            "description": "Phân tích metrics của kênh (subscribers, videos, views, created date)"
+        }
+    ],
+    "business_rules": [
+        "API Keys được lưu trong QSettings (Registry trên Windows)",
+        "API Key rotation tự động khi hết quota (403 quotaExceeded)",
+        "Cache API responses với TTL mặc định 1 giờ",
+        "Batch processing: 50 items per batch cho channel analysis",
+        "Thread pool global để quản lý concurrent tasks",
+        "Progress dialog hiển thị cho tất cả long-running operations",
+        "Tự động tạo thư mục logs nếu chưa tồn tại"
+    ],
+    "knowledge_items": {
+        "patterns": [
+            {
+                "name": "Singleton APIKeyManager",
+                "description": "Dùng threading.Lock để thread-safe, quản lý multiple keys và rotation",
+                "file": "services/api_manager.py"
+            },
+            {
+                "name": "QThread Workers",
+                "description": "Tất cả background tasks dùng QThread với signals để update UI",
+                "example": "ChannelAnalyzerRunnable, FetchChannelVideosThread"
+            },
+            {
+                "name": "Centralized Logging",
+                "description": "Logging system tập trung với file rotation theo ngày",
+                "file": "logging_config.py"
+            }
+        ],
+        "gotchas": [
+            {
+                "issue": "Lambda function argument mismatch",
+                "solution": "Đảm bảo lambda signature khớp với callback expected arguments",
+                "fixed_in": "tab_channel_analyzer.py line 78"
+            },
+            {
+                "issue": "Bare exception handlers nuốt lỗi",
+                "solution": "Luôn catch specific exceptions và log errors",
+                "fixed_in": "utils.py, db_cache.py (audit 28-01-2026)"
+            },
+            {
+                "issue": "print() không hoạt động trong .exe",
+                "solution": "Dùng logging thay vì print()",
+                "fixed_in": "All services (audit 28-01-2026)"
+            }
+        ],
+        "conventions": [
+            "File naming: snake_case cho Python files",
+            "Tab naming: tab_<feature_name>.py",
+            "Signal naming: <action>_<past_tense> (e.g., data_fetched, status_updated)",
+            "Logger naming: logger = logging.getLogger(__name__)",
+            "Exception handling: Specific exceptions + logging"
+        ]
+    },
+    "recent_improvements": [
+        {
+            "date": "2026-01-28",
+            "type": "refactor",
+            "description": "Implemented centralized logging system",
+            "impact": "Better debugging, production-ready logging",
+            "files": [
+                "logging_config.py",
+                "main_app.py",
+                "utils.py",
+                "db_cache.py",
+                "services/api_manager.py",
+                "ai_service.py"
+            ]
+        },
+        {
+            "date": "2026-01-28",
+            "type": "bugfix",
+            "description": "Fixed all bare exception handlers",
+            "impact": "No more silent failures, better error tracking",
+            "files": [
+                "utils.py",
+                "db_cache.py",
+                "main_app.py"
+            ]
+        },
+        {
+            "date": "2026-01-28",
+            "type": "audit",
+            "description": "Full code audit completed",
+            "findings": "5 critical, 8 warnings, 6 suggestions",
+            "report": "docs/reports/audit_28-01-2026.md"
+        }
+    ]
+}

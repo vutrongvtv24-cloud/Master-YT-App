@@ -41,3 +41,6 @@ temp_subs/
 .idea/
 .vscode/
 *.swp
+
+# Brain (local session state)
+.brain/session.json
