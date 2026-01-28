@@ -218,7 +218,7 @@ class ChannelResearchTab(QWidget):
         # Nhóm nhập liệu
         input_group = QGroupBox("Nhập liệu Phân tích Kênh")
         input_group.setFont(QFont("Arial", 11, QFont.Weight.Bold))
-        input_group.setStyleSheet("QGroupBox { background-color: #F5F5F5; }")
+        # input_group.setStyleSheet("QGroupBox { background-color: #F5F5F5; }")
         input_layout = QVBoxLayout()
         input_layout.setSpacing(10)
 
@@ -298,7 +298,7 @@ class ChannelResearchTab(QWidget):
         # Nhóm kết quả
         results_group = QGroupBox("Danh sách Video của Kênh")
         results_group.setFont(QFont("Arial", 11, QFont.Weight.Bold))
-        results_group.setStyleSheet("QGroupBox { background-color: #F5F5F5; }")
+        # results_group.setStyleSheet("QGroupBox { background-color: #F5F5F5; }")
         results_layout = QVBoxLayout()
         results_layout.setSpacing(10)
 
@@ -506,7 +506,7 @@ class ChannelResearchTab(QWidget):
             url = video.get('url', 'N/A')
             url_item = QTableWidgetItem(url)
             url_item.setToolTip(f"Nhấp để mở: {url}\nNhấp chuột phải để sao chép URL.")
-            url_item.setForeground(QColor('blue'))
+            url_item.setForeground(QColor('#4da6ff'))
             url_item.setFont(QFont('Arial', 10, QFont.Weight.Normal, True))
             url_item.setData(Qt.ItemDataRole.UserRole, QUrl(url))
             self.table_channel_videos.setItem(table_row, 7, url_item)

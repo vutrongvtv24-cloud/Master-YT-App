@@ -273,7 +273,7 @@ class ChannelAnalyzerTab(QWidget):
             QTableWidget::item { padding: 5px; }
             QTableWidget::item:selected { background-color: #0078D7; color: white; }
         """)
-        self.url_count_label.setStyleSheet("QTextEdit { background-color: #F0F0F0; border: 1px solid #CCCCCC; }")
+        # self.url_count_label.setStyleSheet("QTextEdit { background-color: #F0F0F0; border: 1px solid #CCCCCC; }")
 
     def update_url_count(self):
         urls = [url.strip() for url in self.url_input.toPlainText().split('\n') if url.strip()]
@@ -349,7 +349,7 @@ class ChannelAnalyzerTab(QWidget):
             self.table.setItem(row, 5, QTableWidgetItem(data['country']))
             self.table.setItem(row, 6, QTableWidgetItem(data['category']))
             url_item = QTableWidgetItem(data['url'])
-            url_item.setForeground(QColor(0, 0, 255))
+            url_item.setForeground(QColor('#4da6ff'))
             url_item.setData(Qt.ItemDataRole.UserRole, data['url'])
             self.table.setItem(row, 7, url_item)
             self.table.setItem(row, 8, QTableWidgetItem(data['status']))

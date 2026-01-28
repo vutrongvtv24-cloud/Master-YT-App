@@ -66,9 +66,14 @@ class YouTubeToolApp(QMainWindow):
         update_lib_action.setStatusTip("Cập nhật thư viện tải video lên phiên bản mới nhất")
         update_lib_action.triggered.connect(self.update_ytdlp_library)
         tools_menu.addAction(update_lib_action)
+        
+        self.toggle_theme_action = QAction("Chuyển chế độ Sáng/Tối", self)
+        self.toggle_theme_action.triggered.connect(self.toggle_theme)
+        tools_menu.addAction(self.toggle_theme_action)
         # ----------------
 
         self.settings = QSettings(ORGANIZATION_NAME, APP_NAME)
+        self.current_theme = self.settings.value("theme", "dark") # Default to dark
         self.api_key = self.settings.value(CONFIG_API_KEY, "")
         self.video_categories = {"Bất kỳ": None}
         self.video_categories_loaded_successfully = False
@@ -140,7 +145,12 @@ class YouTubeToolApp(QMainWindow):
         QApplication.processEvents()
 
         try:
-            youtube_service = build('youtube', 'v3', developerKey=self.api_key)
+            from youtube_service import APIKeyManager
+            key_list = self.api_key.split('\n')
+            key_manager = APIKeyManager(key_list)
+            youtube_service = key_manager.get_service()
+            if not youtube_service:
+                 raise Exception("Không thể khởi tạo dịch vụ YouTube (Key không hợp lệ).")
             region_codes_to_try = ['US', 'VN', 'GB'] 
             response = None
             last_error = None
@@ -351,16 +361,22 @@ class YouTubeToolApp(QMainWindow):
         self.update_button_states()
 
     def apply_styles(self):
+        style_file = "resources/styles.qss" if self.current_theme == "dark" else "resources/light_theme.qss"
         try:
-            style_file_path = resource_path(os.path.join("resources", "styles.qss"))
-            if os.path.exists(style_file_path):
-                with open(style_file_path, "r", encoding="utf-8") as f:
-                    self.setStyleSheet(f.read())
-            else:
-                self.statusBar().showMessage("Không tìm thấy tệp styles.qss. Sử dụng style mặc định.", 3000)
+            with open(resource_path(style_file), "r", encoding='utf-8') as f: # Cần encoding utf-8 để đọc QSS có comment tiếng Việt
+                self.setStyleSheet(f.read())
         except Exception as e:
-            self.statusBar().showMessage(f"Lỗi khi áp dụng style: {e}", 3000)
-            print(f"Error loading stylesheet: {e}")
+            print(f"Error loading styles ({style_file}): {e}")
+
+    def toggle_theme(self):
+        if self.current_theme == "dark":
+            self.current_theme = "light"
+        else:
+            self.current_theme = "dark"
+        
+        self.settings.setValue("theme", self.current_theme)
+        self.apply_styles()
+        self.statusBar().showMessage(f"Đã chuyển sang giao diện {self.current_theme.capitalize()}", 3000)
 
     def closeEvent(self, event):
         if self.is_operation_running and self.current_active_thread:

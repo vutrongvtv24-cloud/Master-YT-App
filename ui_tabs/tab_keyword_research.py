@@ -97,7 +97,7 @@ class SearchVideosThread(QThread):
                 if self.is_shorts_only:
                     search_params['videoDuration'] = 'short'
 
-                search_response = youtube_service.search().list(**search_params).execute()
+                search_response = youtube_service_wrapper.search_videos(self.keyword, **search_params)
                 if self.isInterruptionRequested(): return
 
                 current_page_ids = []
@@ -265,7 +265,12 @@ class SearchChannelsThread(QThread):
             from googleapiclient.discovery import build
             from googleapiclient.errors import HttpError
 
-            youtube_service = build('youtube', 'v3', developerKey=self.api_key)
+            from youtube_service import YouTubeService, APIKeyManager
+
+            key_list = self.api_key.split('\n')
+            key_manager = APIKeyManager(key_list)
+            youtube_service_wrapper = YouTubeService(key_manager)
+
             if self.isInterruptionRequested(): return
 
             self.progress_updated.emit(10, f"Đang tìm kiếm kênh với từ khóa: '{self.keyword}'...")
@@ -289,7 +294,7 @@ class SearchChannelsThread(QThread):
                 }
                 if self.region_code: search_params['regionCode'] = self.region_code
 
-                search_response = youtube_service.search().list(**search_params).execute()
+                search_response = youtube_service_wrapper.search_videos(self.keyword, **search_params)
                 if self.isInterruptionRequested(): return
 
                 current_page_ids = [item['id']['channelId'] for item in search_response.get('items', []) if item.get('id', {}).get('kind') == 'youtube#channel']
@@ -316,10 +321,7 @@ class SearchChannelsThread(QThread):
                 if self.isInterruptionRequested(): return
                 chunk_ids = all_channel_ids[i:i+50]
                 
-                channels_response = youtube_service.channels().list(
-                    part='snippet,statistics',
-                    id=','.join(chunk_ids)
-                ).execute()
+                channels_response = youtube_service_wrapper.get_channel_details(chunk_ids)
                 
                 for channel_data in channels_response.get('items', []):
                     snippet = channel_data.get('snippet', {})
@@ -829,7 +831,7 @@ class KeywordResearchTab(QWidget):
             
             url_item = QTableWidgetItem(video.get('url', 'N/A'))
             url_item.setToolTip(f"URL: {video.get('url', 'N/A')}\nNhấp để mở hoặc chuột phải để sao chép URL.")
-            url_item.setForeground(QColor('blue'))
+            url_item.setForeground(QColor('#4da6ff'))
             font = QFont(); font.setUnderline(True); url_item.setFont(font)
             self.table_videos.setItem(r_idx, 1, url_item)
 
@@ -862,14 +864,14 @@ class KeywordResearchTab(QWidget):
 
             channel_item = QTableWidgetItem(video.get('channel_title', 'N/A'))
             channel_item.setToolTip(f"Kênh: {video.get('channel_title', 'N/A')}\nNhấp để mở hoặc chuột phải để sao chép URL.")
-            channel_item.setForeground(QColor('blue'))
+            channel_item.setForeground(QColor('#4da6ff'))
             font = QFont(); font.setUnderline(True); channel_item.setFont(font)
             self.table_videos.setItem(r_idx, 6, channel_item)
 
             # === SỬA LỖI 3 TẠI ĐÂY ===
             channel_url_item = QTableWidgetItem(video.get('channel_url', 'N/A'))
             channel_url_item.setToolTip(f"URL Kênh: {video.get('channel_url', 'N/A')}\nNhấp để mở hoặc chuột phải để sao chép URL.")
-            channel_url_item.setForeground(QColor('blue'))
+            channel_url_item.setForeground(QColor('#4da6ff'))
             font_url = QFont(); font_url.setUnderline(True); channel_url_item.setFont(font_url)
             # Dòng bị lỗi (đã xóa): self.table_videos.setItem(r_idx, 7, channel_item)
             # Dòng chính xác:
@@ -929,7 +931,7 @@ class KeywordResearchTab(QWidget):
             self.table_videos.setItem(r_idx, 0, title_item)
 
             url_item = QTableWidgetItem(channel.get('url', 'N/A'))
-            url_item.setForeground(QColor('blue')); font = QFont(); font.setUnderline(True); url_item.setFont(font)
+            url_item.setForeground(QColor('#4da6ff')); font = QFont(); font.setUnderline(True); url_item.setFont(font)
             self.table_videos.setItem(r_idx, 1, url_item)
 
             sub_val = channel.get('subscriber_count', -1)
