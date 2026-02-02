@@ -1,11 +1,13 @@
 # youtube_research_tool/ui_tabs/tab_channel_research.py
 
 import json
-import traceback
+import logging
 from datetime import datetime
 import openpyxl
 from openpyxl.utils import get_column_letter
 from openpyxl.styles import Font
+
+logger = logging.getLogger(__name__)
 
 from PyQt6.QtWidgets import (
     QWidget, QVBoxLayout, QHBoxLayout, QLabel, QTextEdit,
@@ -192,8 +194,8 @@ class FetchChannelVideosThread(QThread):
                 self.error_occurred.emit(f"Lỗi API (không thể phân tích phản hồi) khi lấy video kênh: {e.content.decode('utf-8', errors='ignore')}")
         except Exception as e:
             if self.isInterruptionRequested(): return
-            traceback.print_exc()
-            self.error_occurred.emit(f"Lỗi không mong đợi khi lấy video kênh '{self.channel_id}': {str(e)}. Xem console.")
+            logger.exception(f"FetchChannelVideosThread error: {e}")
+            self.error_occurred.emit(f"Lỗi không mong đợi khi lấy video kênh '{self.channel_id}': {str(e)}")
 
     def requestInterruption(self):
         self._is_interruption_requested = True
@@ -593,8 +595,8 @@ class ChannelResearchTab(QWidget):
                         try:
                             if len(str(cell.value)) > max_length:
                                 max_length = len(str(cell.value))
-                        except:
-                            pass
+                        except Exception:
+                            pass  # Non-critical: ignore errors when calculating column width
                 adjusted_width = min(max_length + 2, 70)
                 sheet.column_dimensions[column_letter].width = adjusted_width
 
@@ -605,7 +607,7 @@ class ChannelResearchTab(QWidget):
         except Exception as e:
             self.main_window.statusBar().showMessage(f"Lỗi khi xuất Excel: {str(e)}")
             QMessageBox.critical(self.main_window, "Lỗi Xuất Excel", f"Lỗi: {str(e)}")
-            traceback.print_exc()
+            logger.exception(f"Export channel videos Excel error: {e}")
 
 
     def set_buttons_enabled(self, enabled):

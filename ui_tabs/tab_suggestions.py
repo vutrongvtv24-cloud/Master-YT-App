@@ -1,11 +1,13 @@
 # youtube_research_tool/ui_tabs/tab_suggestions.py
 
 import json
-import traceback
+import logging
 import requests # For YouTube suggestions API (non-data API)
 from datetime import datetime
 import openpyxl
 from openpyxl.utils import get_column_letter
+
+logger = logging.getLogger(__name__)
 
 from PyQt6.QtWidgets import (
     QWidget, QVBoxLayout, QHBoxLayout, QLabel, QLineEdit,
@@ -100,8 +102,8 @@ class FetchSuggestionsThread(QThread):
             self.error_occurred.emit(f"Lỗi: Không thể phân tích phản hồi JSON từ máy chủ gợi ý. Phản hồi nhận được (một phần): {raw_response}")
         except Exception as e:
             if self.isInterruptionRequested(): return
-            traceback.print_exc()
-            self.error_occurred.emit(f"Lỗi không mong đợi khi lấy gợi ý: {str(e)}.")
+            logger.exception(f"FetchSuggestionsThread error: {e}")
+            self.error_occurred.emit(f"Lỗi không mong đợi khi lấy gợi ý: {str(e)}")
 
     def requestInterruption(self):
         self._is_interruption_requested = True
@@ -263,8 +265,8 @@ class SuggestionsTab(QWidget):
                         try:
                             if len(str(cell.value)) > max_length:
                                 max_length = len(str(cell.value))
-                        except:
-                            pass
+                        except Exception:
+                            pass  # Non-critical: ignore errors when calculating column width
                 adjusted_width = min(max_length + 5, 100) # Add some padding, max width 100
                 sheet.column_dimensions[column_letter].width = adjusted_width
 
@@ -275,7 +277,7 @@ class SuggestionsTab(QWidget):
         except Exception as e:
             self.main_window.statusBar().showMessage(f"Lỗi khi xuất gợi ý Excel: {str(e)}")
             QMessageBox.critical(self.main_window, "Lỗi Xuất Excel", f"Lỗi: {str(e)}")
-            traceback.print_exc()
+            logger.exception(f"Export suggestions Excel error: {e}")
 
     def set_buttons_enabled(self, enabled):
         self.btn_fetch_suggestions.setEnabled(enabled)

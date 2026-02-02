@@ -1,7 +1,9 @@
 # youtube_research_tool/ui_tabs/tab_api_key.py
 
 import json
-import traceback
+import logging
+
+logger = logging.getLogger(__name__)
 
 from PyQt6.QtWidgets import (
     QWidget, QVBoxLayout, QHBoxLayout, QLabel, QLineEdit,
@@ -67,8 +69,8 @@ class ApiKeyTestThread(QThread):
                 self.test_result.emit(False, f"Lỗi không xác định khi xử lý lỗi API: {str(ex_inner)}")
         except Exception as e:
             if self.isInterruptionRequested(): return
-            traceback.print_exc()
-            self.test_result.emit(False, f"Lỗi không xác định khi kiểm tra API key: {str(e)}. Xem console.")
+            logger.exception(f"ApiKeyTestThread error: {e}")
+            self.test_result.emit(False, f"Lỗi không xác định khi kiểm tra API key: {str(e)}")
 
     def requestInterruption(self):
         self._is_interruption_requested = True

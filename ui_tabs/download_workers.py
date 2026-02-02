@@ -1,15 +1,36 @@
 import os
 import re
-import traceback
+import logging
+import shutil
 import yt_dlp
 from datetime import datetime
 from PyQt6.QtCore import QThread, pyqtSignal
+
+logger = logging.getLogger(__name__)
 
 # --- Constants ---
 AUDIO_FORMATS_DL = ["mp3", "m4a", "wav"]
 BATCH_SIZE = 5
 MAX_PLAYLIST_ENTRIES = 50
 ACTIVITY_LOG_MAX_LINES = 100 # Giới hạn số dòng trong log
+
+
+def check_ffmpeg_available():
+    """Check if FFmpeg is available in PATH or common locations."""
+    if shutil.which('ffmpeg'):
+        return True, shutil.which('ffmpeg')
+    
+    # Check common Windows locations
+    common_paths = [
+        r'C:\ffmpeg\bin\ffmpeg.exe',
+        r'D:\ffmpeg\bin\ffmpeg.exe',
+        os.path.expanduser(r'~\ffmpeg\bin\ffmpeg.exe'),
+    ]
+    for path in common_paths:
+        if os.path.isfile(path):
+            return True, path
+    
+    return False, None
 
 # --- Custom Exception for Cancellation ---
 class CancelledErrorDL(Exception):
@@ -124,9 +145,24 @@ class DownloadMediaThread(QThread):
                         'nocheckcertificate': True,
                         'continuedl': True,
                         'fragment_retries': 10,
-                        'retry_sleep_functions': {'http': lambda n: min(n * 1, 30), 'fragment': lambda n: min(n * 1, 30)},
+                        'retries': 10,
+                        'file_access_retries': 5,
+                        'retry_sleep_functions': {'http': lambda n: min(n * 2, 60), 'fragment': lambda n: min(n * 2, 60)},
                         'restrictfilenames': False,
                         'playlistend': MAX_PLAYLIST_ENTRIES,
+                        # --- Anti-Blocking / Bypass 403 Options ---
+                        'extractor_args': {
+                            'youtube': {
+                                'player_client': ['android', 'ios'], # Prefer mobile clients which are less rate-limited
+                                'skip': ['dash', 'hls'], # Sometimes helps with 403
+                            }
+                        },
+                        'http_headers': {
+                            'User-Agent': 'Mozilla/5.0 (Windows NT 10.0; Win64; x64) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/120.0.0.0 Safari/537.36',
+                            'Referer': 'https://www.youtube.com/',
+                            'Accept-Language': 'en-US,en;q=0.9',
+                        },
+                        'socket_timeout': 30,
                     }
 
                     if self.is_audio_only:
@@ -412,7 +448,8 @@ class DownloadCommentsThread(QThread):
                     self.failed_urls.append(url_item)
                 except Exception as e:
                     err = f"Lỗi không xác định (comments) URL {current_url_num}: {type(e).__name__} - {str(e)[:150]}"
-                    errors.append(err); self.error_signal.emit(err); traceback.print_exc()
+                    errors.append(err); self.error_signal.emit(err)
+                    logger.exception(f"DownloadCommentsThread error: {err}")
                     self.failed_urls.append(url_item)
 
                 self.msleep(10)
@@ -498,7 +535,7 @@ class DownloadSubtitlesThread(QThread):
             return False
         except Exception as e:
             self.error_signal.emit(f"Lỗi khi chuyển đổi {os.path.basename(subtitle_filepath)} sang TXT: {e}")
-            traceback.print_exc()
+            logger.exception(f"Subtitle conversion error: {e}")
             return False
 
     def run(self):
@@ -630,7 +667,8 @@ class DownloadSubtitlesThread(QThread):
                     self.failed_urls.append(url_item)
                 except Exception as e:
                     err = f"Lỗi không xác định (phụ đề chung) URL {current_url_num}: {type(e).__name__} - {str(e)[:150]}"
-                    errors.append(err); self.error_signal.emit(err); traceback.print_exc()
+                    errors.append(err); self.error_signal.emit(err)
+                    logger.exception(f"DownloadSubtitleThread error: {err}")
                     self.failed_urls.append(url_item)
 
                 self.msleep(10)

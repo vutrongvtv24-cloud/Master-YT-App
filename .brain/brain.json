@@ -97,9 +97,19 @@
                 "FetchChannelVideosThread",
                 "DownloadMediaThread",
                 "DownloadCommentsThread",
-                "DownloadSubtitlesThread"
+                "DownloadSubtitlesThread",
+                "SearchVideosThread",
+                "FetchSuggestionsThread",
+                "ApiKeyTestThread"
             ]
-        }
+        },
+        "ui_components": [
+            {
+                "name": "ActivityLogWidget",
+                "path": "ui_components/activity_log_widget.py",
+                "description": "Reusable widget for displaying colorful activity logs"
+            }
+        ]
     },
     "database_schema": {
         "summary": "SQLite database chỉ dùng để cache API responses, giảm quota usage",

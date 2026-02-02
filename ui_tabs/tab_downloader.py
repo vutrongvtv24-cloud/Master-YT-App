@@ -18,7 +18,8 @@ from ui_tabs.download_workers import (
     DownloadCommentsThread,
     DownloadSubtitlesThread,
     AUDIO_FORMATS_DL,
-    ACTIVITY_LOG_MAX_LINES
+    ACTIVITY_LOG_MAX_LINES,
+    check_ffmpeg_available
 )
 
 class DownloaderTab(QWidget):
@@ -29,6 +30,7 @@ class DownloaderTab(QWidget):
         self.cancel_event_tab6 = threading.Event()
         self.current_download_thread = None
         self.downloaded_urls = set()
+        self.last_comment_urls = []  # Lưu URLs khi quét comments để lấy tiêu đề khi export
 
         self._setup_ui()
         self._connect_signals()
@@ -165,9 +167,19 @@ class DownloaderTab(QWidget):
         self.comments_table.horizontalHeader().setSectionResizeMode(3, QHeaderView.ResizeMode.ResizeToContents)
         comment_results_layout.addWidget(self.comments_table)
 
+        # Export buttons layout
+        export_buttons_layout = QHBoxLayout()
+        export_buttons_layout.addStretch()
+        
+        self.btn_export_comments_txt = QPushButton("Xuất ra TXT (chỉ nội dung)")
+        self.btn_export_comments_txt.setEnabled(False)
+        export_buttons_layout.addWidget(self.btn_export_comments_txt)
+        
         self.btn_export_comments = QPushButton("Xuất kết quả ra CSV")
         self.btn_export_comments.setEnabled(False)
-        comment_results_layout.addWidget(self.btn_export_comments, 0, Qt.AlignmentFlag.AlignRight)
+        export_buttons_layout.addWidget(self.btn_export_comments)
+        
+        comment_results_layout.addLayout(export_buttons_layout)
         layout.addWidget(comment_results_group)
         
         layout.addStretch()
@@ -184,6 +196,7 @@ class DownloaderTab(QWidget):
         self.btn_download_subtitles.clicked.connect(self._start_download_subtitles)
         self.btn_cancel_download.clicked.connect(self._request_cancel_tab6)
         self.btn_export_comments.clicked.connect(self._export_comments_to_csv)
+        self.btn_export_comments_txt.clicked.connect(self._export_comments_to_txt)
 
     def _on_format_change(self, _=None):
         selected_format = self.combo_format.currentText()
@@ -268,11 +281,40 @@ class DownloaderTab(QWidget):
         urls = self._get_urls_from_input("media")
         if not urls: return
         
+        # Check FFmpeg availability (required for video merge and audio extraction)
+        is_audio = self.combo_format.currentText() in AUDIO_FORMATS_DL
+        ffmpeg_available, ffmpeg_path = check_ffmpeg_available()
+        
+        if not ffmpeg_available:
+            warning_msg = (
+                "\u26a0\ufe0f FFmpeg kh\u00f4ng \u0111\u01b0\u1ee3c t\u00ecm th\u1ea5y trong PATH!\n\n"
+                "FFmpeg c\u1ea7n thi\u1ebft \u0111\u1ec3:\n"
+                "- Gh\u00e9p video + audio streams\n"
+                "- Chuy\u1ec3n \u0111\u1ed5i sang MP3/M4A/WAV\n\n"
+                "L\u1ef1a ch\u1ecdn:\n"
+                "1. C\u00e0i \u0111\u1eb7t FFmpeg v\u00e0 th\u00eam v\u00e0o PATH\n"
+                "2. V\u1eabn ti\u1ebfp t\u1ee5c (c\u00f3 th\u1ec3 l\u1ed7i)\n\n"
+                "B\u1ea1n mu\u1ed1n ti\u1ebfp t\u1ee5c kh\u00f4ng?"
+            )
+            reply = QMessageBox.warning(
+                self.main_window, "FFmpeg kh\u00f4ng t\u00ecm th\u1ea5y", 
+                warning_msg,
+                QMessageBox.StandardButton.Yes | QMessageBox.StandardButton.No,
+                QMessageBox.StandardButton.No
+            )
+            if reply == QMessageBox.StandardButton.No:
+                self._log_activity("[WARN] H\u1ee7y t\u1ea3i - FFmpeg kh\u00f4ng t\u00ecm th\u1ea5y.")
+                return
+            else:
+                self._log_activity("[WARN] Ti\u1ebfp t\u1ee5c t\u1ea3i m\u00e0 kh\u00f4ng c\u00f3 FFmpeg - c\u00f3 th\u1ec3 g\u1eb7p l\u1ed7i.")
+        else:
+            self._log_activity(f"\u2705 FFmpeg \u0111\u00e3 t\u00ecm th\u1ea5y: {ffmpeg_path}")
+        
         save_dir = self.txt_save_path.text()
         if not os.path.exists(save_dir):
             try: os.makedirs(save_dir)
             except Exception as e:
-                QMessageBox.critical(self, "Lỗi", f"Không thể tạo thư mục lưu: {e}")
+                QMessageBox.critical(self, "L\u1ed7i", f"Kh\u00f4ng th\u1ec3 t\u1ea1o th\u01b0 m\u1ee5c l\u01b0u: {e}")
                 return
 
         quality = self.combo_quality.currentText()
@@ -281,7 +323,7 @@ class DownloaderTab(QWidget):
         
         self._update_ui_state(True)
         self.activity_log.clear()
-        self._log_activity(f"Bắt đầu tải {len(urls)} URL (Media)...")
+        self._log_activity(f"B\u1eaft \u0111\u1ea7u t\u1ea3i {len(urls)} URL (Media)...")
 
         self.current_download_thread = DownloadMediaThread(
             urls, save_dir, quality, fmt, is_audio, 
@@ -312,7 +354,8 @@ class DownloaderTab(QWidget):
         self._update_ui_state(True)
         self.activity_log.clear()
         self.comments_table.setRowCount(0)
-        self.comments_table.setSortingEnabled(False) 
+        self.comments_table.setSortingEnabled(False)
+        self.last_comment_urls = urls  # Lưu lại URLs để lấy tiêu đề khi export
         self._log_activity(f"Bắt đầu tải bình luận cho {len(urls)} URL...")
 
         self.current_download_thread = DownloadCommentsThread(
@@ -381,9 +424,10 @@ class DownloaderTab(QWidget):
             current_row += 1
             
         self.comments_table.setSortingEnabled(True)
-        # Enable Export button if we have data
+        # Enable Export buttons if we have data
         if self.comments_table.rowCount() > 0:
             self.btn_export_comments.setEnabled(True)
+            self.btn_export_comments_txt.setEnabled(True)
 
     def _export_comments_to_csv(self):
         if self.comments_table.rowCount() == 0:
@@ -409,3 +453,70 @@ class DownloaderTab(QWidget):
             QMessageBox.information(self.main_window, "Thành công", f"Đã xuất {self.comments_table.rowCount()} bình luận ra file CSV.")
         except Exception as e:
             QMessageBox.critical(self.main_window, "Lỗi", f"Không thể lưu file: {e}")
+
+    def _export_comments_to_txt(self):
+        """Xuất chỉ nội dung bình luận ra file TXT.
+        - Mỗi bình luận có dấu '-' ở đầu
+        - Nếu 1 URL: tên file = tiêu đề video
+        - Nếu nhiều URL: user tự đặt tên
+        """
+        if self.comments_table.rowCount() == 0:
+            return
+
+        default_filename = ""
+        
+        # Nếu chỉ có 1 URL → lấy tiêu đề video làm tên file
+        if len(self.last_comment_urls) == 1:
+            try:
+                import yt_dlp
+                ydl_opts = {
+                    'quiet': True,
+                    'no_warnings': True,
+                    'skip_download': True,
+                    'extract_flat': True,
+                }
+                with yt_dlp.YoutubeDL(ydl_opts) as ydl:
+                    info = ydl.extract_info(self.last_comment_urls[0], download=False)
+                    if info and info.get('title'):
+                        # Sanitize filename
+                        title = info['title']
+                        invalid_chars = '<>:"/\\|?*'
+                        for char in invalid_chars:
+                            title = title.replace(char, '_')
+                        default_filename = title[:100] + "_comments.txt"
+            except Exception:
+                pass  # Nếu không lấy được title thì để user tự đặt
+
+        # Mở dialog lưu file
+        save_dir = self.txt_save_path.text() if self.txt_save_path.text() else ""
+        if default_filename:
+            default_path = os.path.join(save_dir, default_filename)
+        else:
+            default_path = save_dir
+            
+        file_path, _ = QQtFileDialog.getSaveFileName(
+            self, "Lưu file TXT", default_path, "Text Files (*.txt)"
+        )
+        if not file_path:
+            return
+
+        try:
+            with open(file_path, mode='w', encoding='utf-8') as file:
+                for row in range(self.comments_table.rowCount()):
+                    # Cột 1 (index 1) là "Nội dung bình luận"
+                    item = self.comments_table.item(row, 1)
+                    if item:
+                        comment_text = item.text().strip()
+                        if comment_text:
+                            # Thêm dấu "-" ở đầu mỗi bình luận
+                            file.write(f"- {comment_text}\n")
+            
+            QMessageBox.information(
+                self.main_window, 
+                "Thành công", 
+                f"Đã xuất {self.comments_table.rowCount()} bình luận ra file TXT.\n{file_path}"
+            )
+            self._log_activity(f"✅ Đã xuất bình luận ra: {file_path}")
+        except Exception as e:
+            QMessageBox.critical(self.main_window, "Lỗi", f"Không thể lưu file: {e}")
+            self._log_activity(f"❌ Lỗi xuất TXT: {e}")

@@ -1,9 +1,11 @@
 import json
-import traceback
+import logging
 from datetime import datetime, timezone, timedelta
 import openpyxl
 from openpyxl.utils import get_column_letter
 from openpyxl.styles import Font, Alignment
+
+logger = logging.getLogger(__name__)
 from isodate import parse_duration
 from PyQt6.QtWidgets import (
     QWidget, QVBoxLayout, QHBoxLayout, QLabel, QLineEdit,
@@ -167,7 +169,8 @@ class SearchVideosThread(QThread):
                 duration_str = content_details.get('duration', 'PT0S')
                 try:
                     duration_seconds = parse_duration(duration_str).total_seconds()
-                except:
+                except Exception as e:
+                    logger.debug(f"Could not parse duration '{duration_str}': {e}")
                     duration_seconds = 0
 
                 if self.is_shorts_only:
@@ -231,8 +234,8 @@ class SearchVideosThread(QThread):
                 self.error_occurred.emit(f"Lỗi API (không thể phân tích phản hồi): {e.content.decode('utf-8', errors='ignore')}")
         except Exception as e:
             if self.isInterruptionRequested(): return
-            traceback.print_exc()
-            self.error_occurred.emit(f"Lỗi không mong đợi: {str(e)}. Xem console.")
+            logger.exception(f"SearchVideosThread error: {e}")
+            self.error_occurred.emit(f"Lỗi không mong đợi: {str(e)}")
 
     def requestInterruption(self):
         self._is_interruption_requested = True
@@ -271,11 +274,8 @@ class SearchChannelsThread(QThread):
             from googleapiclient.discovery import build
             from googleapiclient.errors import HttpError
 
-            from youtube_service import YouTubeService, APIKeyManager
-
-            key_list = self.api_key.split('\n')
-            key_manager = APIKeyManager(key_list)
-            youtube_service_wrapper = YouTubeService(key_manager)
+            # Use centralized API manager (same as SearchVideosThread)
+            youtube_service_wrapper = YouTubeService()
 
             if self.isInterruptionRequested(): return
 
@@ -371,8 +371,8 @@ class SearchChannelsThread(QThread):
                 self.error_occurred.emit(f"Lỗi API (không thể phân tích phản hồi): {e.content.decode('utf-8', errors='ignore')}")
         except Exception as e:
             if self.isInterruptionRequested(): return
-            traceback.print_exc()
-            self.error_occurred.emit(f"Lỗi không mong đợi: {str(e)}. Xem console.")
+            logger.exception(f"SearchChannelsThread error: {e}")
+            self.error_occurred.emit(f"Lỗi không mong đợi: {str(e)}")
 
     def requestInterruption(self):
         self._is_interruption_requested = True
@@ -1185,7 +1185,8 @@ class KeywordResearchTab(QWidget):
                         try:
                             if len(str(cell.value)) > max_length:
                                 max_length = len(str(cell.value))
-                        except: pass
+                        except Exception:
+                            pass  # Non-critical: ignore errors when calculating column width
                 adjusted_width = min(max_length + 2, 70)
                 sheet.column_dimensions[column_letter].width = adjusted_width
 
@@ -1196,7 +1197,7 @@ class KeywordResearchTab(QWidget):
         except Exception as e:
             self.main_window.statusBar().showMessage(f"Lỗi khi xuất Excel: {str(e)}")
             QMessageBox.critical(self.main_window, "Lỗi Xuất Excel", f"Lỗi: {str(e)}")
-            traceback.print_exc()
+            logger.exception(f"Export videos to Excel error: {e}")
 
     def set_buttons_enabled(self, enabled):
         self.btn_search.setEnabled(enabled)

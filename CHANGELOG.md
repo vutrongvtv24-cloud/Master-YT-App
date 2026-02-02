@@ -1,48 +1,23 @@
 # Changelog
 
-Tất cả các thay đổi quan trọng của dự án Master-YT-App sẽ được ghi lại ở đây.
+## [2026-02-02] - Download Fixes & UX Improvements
+### Added
+- **Activity Log Component**: Widget hiển thị log màu sắc (Info/Warn/Error) (`ui_components/activity_log_widget.py`).
+- **Export TXT**: Xuất bình luận ra file TXT với format `- [content]` và tự động đặt tên file theo tiêu đề video.
+- **FFmpeg Check**: Tự động kiểm tra và cảnh báo nếu FFmpeg chưa cài đặt hoặc thiếu trong PATH.
+
+### Fixed
+- **YouTube 403 Forbidden**: Cập nhật cấu hình `yt-dlp` giả lập Android/iOS client để bypass chặn bot.
+- **Code Quality**: Thay thế toàn bộ `traceback.print_exc()` bằng `logging`, fix lỗi bare exceptions.
+- **Import Error**: Sửa lỗi import trong `SearchChannelsThread`.
+
+### Changed
+- Refactor `download_workers.py` để hỗ trợ custom options bypass 403.
+- Cập nhật UI Tab Downloader để hiển thị nút Export TXT.
 
 ---
 
-## [2026-01-28] - Tối
-
-### Added ✨
-- **Tính năng xuất bình luận ra TXT** (Tab 4)
-  - Nút "Xuất ra TXT (chỉ nội dung)" bên cạnh nút CSV
-  - Chỉ xuất nội dung bình luận thuần túy, không có metadata (tác giả, like, reply)
-  - Mỗi bình luận cách nhau 2 dòng trống để dễ đọc
-  - Hữu ích cho phân tích văn bản, training AI, hoặc đọc nhanh
-
-### Technical Details
-- File: `ui_tabs/tab_downloader.py`
-- Method mới: `_export_comments_to_txt()`
-- Encoding: UTF-8 (hỗ trợ tiếng Việt)
-
----
-
-## [2026-01-28] - Chiều
-
-### Changed 🔧
-- **Triển khai hệ thống logging tập trung**
-  - Tạo file `logging_config.py` với auto log rotation theo ngày
-  - Logs được lưu tại: `~/YouTubeResearchTool/logs/app_YYYYMMDD.log`
-  - Thay thế tất cả `print()` bằng `logging` trong toàn bộ codebase
-
-### Fixed 🐛
-- **Sửa tất cả bare exception handlers**
-  - `utils.py`: 4 chỗ (format_datetime_iso, format_date_dd_mm_yyyy, format_int_with_separator, convert_iso_duration)
-  - `db_cache.py`: 2 chỗ (clear_cache_key, clear_all_cache)
-  - `main_app.py`: 1 chỗ (JSON parsing)
-  - Giờ đây tất cả lỗi đều được log ra, không còn "nuốt" lỗi
-
-### Documentation 📝
-- Hoàn thành full code audit
-- Tạo báo cáo: `docs/reports/audit_28-01-2026.md`
-- Tạo báo cáo fix: `docs/reports/fix_all_report_28-01-2026.md`
-- Findings: 5 critical, 8 warnings, 6 suggestions → **Tất cả đã được sửa**
-
----
-
-## Phiên bản trước
-
-Xem git history để biết các thay đổi trước ngày 2026-01-28.
+## [2026-01-28] - Initial Audit & Basic Fixes
+### Added
+- Audit reports.
+- `APIKeyManager` rotation logic.
